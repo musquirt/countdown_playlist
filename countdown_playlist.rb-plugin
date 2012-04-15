@@ -1,0 +1,9 @@
+[RB Plugin]
+Loader=python
+Module=countdown_playlist
+IAge=1
+Name=Countdown Playlist
+Description=Create a playlist using the specified parameters that will only play for a certain period of time.
+Authors=Larry Price (larry.rick.price@gmail.com)
+Copyright=This software is absolutely free: as in freedom, love, or beer.
+Website=http://web.ics.purdue.edu/~lrprice

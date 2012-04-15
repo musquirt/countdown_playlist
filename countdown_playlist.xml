@@ -1,0 +1,7 @@
+<ui> 
+  <toolbar name="ToolBar"> 
+    <placeholder name="CountdownPlaylistPlaceholder" >
+        <toolitem name="Countdown Playlist" action="ControlPlay" />
+    </placeholder>
+  </toolbar>
+</ui>
