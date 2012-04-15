@@ -1,6 +1,21 @@
-import rb, gtk, rhythmdb, random, string, copy
+# Countdown Playlist Rhythmbox Plugin
 
-# @TODO: Get a working icon. Create GUI. Turn off repeat.
+# Copyright Larry Price <larry.price.dev@gmail.com>, 2011-2012
+# This program is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import rb, gtk, rhythmdb, random, string, copy, os
 
 ui_string = \
 """<ui> 
@@ -16,7 +31,7 @@ class CountdownPlaylist (rb.Plugin):
         rb.Plugin.__init__(self)
 
     def activate(self, shell):
-        icon_file_name = "/usr/share/rhythmbox/icons/hicolor/scalable/places/playlist.svg"
+        icon_file_name = os.path.dirname(__file__) + "/Countdown-Clock.png"
         iconsource = gtk.IconSource()
         iconsource.set_filename(icon_file_name)
         iconset = gtk.IconSet()
@@ -95,7 +110,7 @@ class CountdownPlaylist (rb.Plugin):
                                 gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
                                 
             entryKeyword = gtk.Entry()
-            labelKeyword = gtk.Label("Keyword (Artist, Genre, Album, Title, etc): ")
+            labelKeyword = gtk.Label("Keywords (Separated by commas, blank for anything): ")
             
             entryHour = gtk.Entry()
             labelDuration = gtk.Label("Duration (hour min sec): ")
@@ -173,31 +188,36 @@ class CountdownPlaylist (rb.Plugin):
         if not RequestedDuration:
             return
         
-        ## find all songs that correspond to the request ##
+         ## find all songs that correspond to the request ##
          # on another note, if the request is blank, we  #
          # will just create a playlist using every song  #
-        CountdownList = []
-        if ReqKeyword:
-            for row in shell.props.library_source.props.base_query_model:
-                 entry = row[0]
-                 ReqKeyword = string.lower(ReqKeyword)
-                 artist = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ARTIST))
-                 genre  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_GENRE))
-                 title  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_TITLE))
-                 album  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ALBUM))
-                 album_artist  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ALBUM_ARTIST))
-                 comment  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_COMMENT))
-                 year  = shell.props.db.entry_get(entry, rhythmdb.PROP_YEAR)
-                 if string.find(artist, ReqKeyword) is not -1 or string.find(genre, ReqKeyword) is not -1 or \
-                        string.find(title, ReqKeyword) is not -1 or string.find(album, ReqKeyword) is not -1 or \
-                        string.find(album_artist, ReqKeyword) is not -1 or string.find(comment, ReqKeyword) is not -1 \
-                        or string.find(string.lower(str(year)), ReqKeyword) is not -1:
-                    songLocation = shell.props.db.entry_get(entry, \
+        
+        if ReqKeyword: # use booleanness of string
+            ReqKeywords = ReqKeyword.split(',')
+            CountdownList = []
+            for keyword in ReqKeywords:
+                keyword.lstrip(' ')
+                for row in shell.props.library_source.props.base_query_model:
+                    entry = row[0]
+                    keyword = string.lower(keyword)
+                    artist = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ARTIST))
+                    genre  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_GENRE))
+                    title  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_TITLE))
+                    album  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ALBUM))
+                    album_artist  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_ALBUM_ARTIST))
+                    comment  = string.lower(shell.props.db.entry_get(entry, rhythmdb.PROP_COMMENT))
+                    year  = shell.props.db.entry_get(entry, rhythmdb.PROP_YEAR)
+                    if string.find(artist, keyword) is not -1 or string.find(genre, keyword) is not -1 or \
+                            string.find(title, keyword) is not -1 or string.find(album, keyword) is not -1 or \
+                            string.find(album_artist, keyword) is not -1 or string.find(comment, keyword) is not -1 \
+                            or string.find(string.lower(str(year)), keyword) is not -1:
+                        songLocation = shell.props.db.entry_get(entry, \
                                     rhythmdb.PROP_LOCATION)
-                    songDuration = shell.props.db.entry_get(entry, \
+                        songDuration = shell.props.db.entry_get(entry, \
                                      rhythmdb.PROP_DURATION)
-                    CountdownList.append([songLocation, songDuration])
-        if not ReqKeyword or not CountdownList:
+                        CountdownList.append([songLocation, songDuration])
+        # add all songs if query failure
+        if not ReqKeywords or not CountdownList:
             for row in shell.props.library_source.props.base_query_model:
                 entry = row[0]
                 songLocation = shell.props.db.entry_get(entry, rhythmdb.PROP_LOCATION)
